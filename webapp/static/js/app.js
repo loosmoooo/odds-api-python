@@ -7,6 +7,7 @@
  */
 
 const DEFAULT_MARKETS = "ML,Spread,Totals";
+const DEFAULT_BOOKMAKERS = "Bet365,SingBet";
 
 const state = {
   sport: null,
@@ -144,7 +145,7 @@ async function loadOdds(eventId) {
   eventDetail.innerHTML = `<p class="muted">Loading odds...</p>`;
   try {
     const odds = await fetchJSON(
-      `/api/odds?event_id=${encodeURIComponent(eventId)}&bookmakers=Bet365,SingBet`
+      `/api/odds?event_id=${encodeURIComponent(eventId)}&bookmakers=${encodeURIComponent(DEFAULT_BOOKMAKERS)}`
     );
     renderOdds(odds);
   } catch (err) {
