@@ -221,21 +221,20 @@ function logFeed(message) {
   }
 }
 
+function buildFeedPayload() {
+  return {
+    sport: state.sport,
+    leagues: state.league || undefined,
+    markets: "ML,Spread,Totals",
+    status: state.status === "live" ? "live" : "prematch",
+  };
+}
+
 feedToggle.addEventListener("change", () => {
   if (feedToggle.checked) {
-    socket.emit("subscribe", {
-      sport: state.sport,
-      leagues: state.league || undefined,
-      markets: "ML,Spread,Totals",
-      status: state.status === "live" ? "live" : "prematch",
-    });
+    socket.emit("subscribe", buildFeedPayload());
   } else {
-    socket.emit("unsubscribe", {
-      sport: state.sport,
-      leagues: state.league || undefined,
-      markets: "ML,Spread,Totals",
-      status: state.status === "live" ? "live" : "prematch",
-    });
+    socket.emit("unsubscribe", buildFeedPayload());
   }
 });
 

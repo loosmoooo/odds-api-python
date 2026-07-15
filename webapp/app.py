@@ -50,8 +50,13 @@ def get_client() -> OddsAPIClient:
 
 def handle_api_error(exc: Exception):
     logger.exception("Odds-API request failed")
-    status = 502 if isinstance(exc, OddsAPIError) else 500
-    return jsonify({"error": str(exc)}), status
+    if isinstance(exc, OddsAPIError):
+        return jsonify({"error": str(exc)}), 502
+    if isinstance(exc, RuntimeError):
+        # Configuration errors (e.g. missing API key) are safe to surface.
+        return jsonify({"error": str(exc)}), 500
+    # Avoid leaking internal exception details/stack traces to clients.
+    return jsonify({"error": "Internal server error"}), 500
 
 
 # ─── Pages ─────────────────────────────────────────────────────────────
@@ -67,7 +72,7 @@ def index():
 
 @app.route("/api/sports")
 def api_sports():
-    """1. Get all sports/leagues that can be participated in."""
+    """1. Get all sports that can be queried."""
     try:
         client = get_client()
         try:
@@ -153,7 +158,7 @@ class OddsFeedBroadcaster:
         self._feeds = {}  # room -> {"ws": WebSocketApp, "thread": Thread}
 
     @staticmethod
-    def _room_name(sport, leagues, markets, status):
+    def room_name(sport, leagues, markets, status):
         return "|".join(
             [
                 sport or "",
@@ -174,7 +179,7 @@ class OddsFeedBroadcaster:
         return f"{WS_URL}?{urlencode(params)}"
 
     def ensure_feed(self, sport, leagues, markets, status):
-        room = self._room_name(sport, leagues, markets, status)
+        room = self.room_name(sport, leagues, markets, status)
         with self._lock:
             if room in self._feeds:
                 return room
@@ -254,7 +259,7 @@ def on_subscribe(payload):
 def on_unsubscribe(payload):
     from flask_socketio import leave_room
 
-    room = broadcaster._room_name(
+    room = broadcaster.room_name(
         (payload or {}).get("sport"),
         (payload or {}).get("leagues"),
         (payload or {}).get("markets") or "ML,Spread,Totals",
