@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Odds-API.io Live Odds Explorer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Odds-API.io Live Odds Explorer</h1>
+    <span id="conn-status" class="badge badge-offline">Disconnected</span>
+  </header>
+
+  {% if not api_key_configured %}
+  <div class="warning-banner">
+    ⚠️ <strong>ODDS_API_KEY</strong> is not set on the server. REST calls and the
+    live feed will fail until you export a valid API key
+    (see <a href="https://odds-api.io" target="_blank" rel="noopener">odds-api.io</a>)
+    and restart the app.
+  </div>
+  {% endif %}
+
+  <main class="layout">
+    <section class="panel">
+      <h2>1. Sports &amp; Leagues</h2>
+      <label for="sport-select">Sport</label>
+      <select id="sport-select"></select>
+
+      <label for="league-select">League</label>
+      <select id="league-select">
+        <option value="">All leagues</option>
+      </select>
+    </section>
+
+    <section class="panel">
+      <h2>2. Events</h2>
+      <div class="status-tabs">
+        <button class="tab-btn active" data-status="upcoming">Upcoming</button>
+        <button class="tab-btn" data-status="live">Live</button>
+      </div>
+      <ul id="events-list" class="events-list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>3. Odds</h2>
+      <div id="event-detail" class="event-detail">
+        <p class="muted">Select an event to view its odds.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>4. Live Odds Feed (WebSocket)</h2>
+      <div class="feed-controls">
+        <label>
+          <input type="checkbox" id="feed-toggle"> Subscribe to live updates
+          for the selected sport/league
+        </label>
+      </div>
+      <ul id="feed-log" class="feed-log"></ul>
+    </section>
+  </main>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
