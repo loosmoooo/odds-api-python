@@ -21,7 +21,7 @@ from urllib.parse import urlencode
 
 import websocket
 from flask import Flask, jsonify, render_template, request
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room, leave_room
 
 from odds_api import OddsAPIClient
 from odds_api.exceptions import OddsAPIError
@@ -39,22 +39,32 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 def get_client() -> OddsAPIClient:
     """Create a new SDK client for the configured API key."""
-    if not API_KEY:
-        raise RuntimeError(
-            "ODDS_API_KEY environment variable is not set. "
-            "Get a key at https://odds-api.io and export it before "
-            "starting the server."
-        )
     return OddsAPIClient(api_key=API_KEY)
+
+
+def require_api_key():
+    """Return a JSON error response if no API key is configured, else None."""
+    if not API_KEY:
+        return (
+            jsonify(
+                {
+                    "error": "Server is missing ODDS_API_KEY. Get a key at "
+                    "https://odds-api.io and export it before starting "
+                    "the server."
+                }
+            ),
+            500,
+        )
+    return None
 
 
 def handle_api_error(exc: Exception):
     logger.exception("Odds-API request failed")
     if isinstance(exc, OddsAPIError):
-        return jsonify({"error": str(exc)}), 502
-    if isinstance(exc, RuntimeError):
-        # Configuration errors (e.g. missing API key) are safe to surface.
-        return jsonify({"error": str(exc)}), 500
+        # Don't relay the raw exception text to the client: even though it
+        # originates from the upstream Odds-API.io service, treat it as
+        # untrusted to avoid leaking any internal details to end users.
+        return jsonify({"error": "Odds-API.io request failed"}), 502
     # Avoid leaking internal exception details/stack traces to clients.
     return jsonify({"error": "Internal server error"}), 500
 
@@ -73,6 +83,9 @@ def index():
 @app.route("/api/sports")
 def api_sports():
     """1. Get all sports that can be queried."""
+    error = require_api_key()
+    if error:
+        return error
     try:
         client = get_client()
         try:
@@ -88,6 +101,9 @@ def api_leagues():
     sport = request.args.get("sport")
     if not sport:
         return jsonify({"error": "Query parameter 'sport' is required"}), 400
+    error = require_api_key()
+    if error:
+        return error
     try:
         client = get_client()
         try:
@@ -106,6 +122,9 @@ def api_events():
         return jsonify({"error": "Query parameter 'sport' is required"}), 400
     league = request.args.get("league") or None
     status = request.args.get("status") or None
+    error = require_api_key()
+    if error:
+        return error
     try:
         client = get_client()
         try:
@@ -129,6 +148,9 @@ def api_odds():
     bookmakers = request.args.get("bookmakers", "Bet365")
     if not event_id:
         return jsonify({"error": "Query parameter 'event_id' is required"}), 400
+    error = require_api_key()
+    if error:
+        return error
     try:
         client = get_client()
         try:
@@ -249,16 +271,12 @@ def on_subscribe(payload):
     status = (payload or {}).get("status")
 
     room = broadcaster.ensure_feed(sport, leagues, markets, status)
-    from flask_socketio import join_room
-
     join_room(room)
     socketio.emit("subscribed", {"room": room}, room=request.sid)
 
 
 @socketio.on("unsubscribe")
 def on_unsubscribe(payload):
-    from flask_socketio import leave_room
-
     room = broadcaster.room_name(
         (payload or {}).get("sport"),
         (payload or {}).get("leagues"),

@@ -6,6 +6,8 @@
  * odds updates.
  */
 
+const DEFAULT_MARKETS = "ML,Spread,Totals";
+
 const state = {
   sport: null,
   league: null,
@@ -52,14 +54,15 @@ function setOptions(select, items, { valueKey, labelKey, placeholder }) {
 async function loadSports() {
   try {
     const sports = await fetchJSON("/api/sports");
-    setOptions(sportSelect, sports, { valueKey: "slug", labelKey: "name" });
-    if (!sportSelect.value && sports.length) {
-      // Some payloads may use `id`/`key` instead of `slug`; fall back.
-      const first = sports[0];
-      state.sport = first.slug || first.key || first.id;
-    } else {
-      state.sport = sportSelect.value;
-    }
+    // Normalise the sport identifier field name (APIs may use
+    // `slug`, `key`, or `id`) so the <select> value always matches
+    // what we store in `state.sport`.
+    const normalised = sports.map((s) => ({
+      ...s,
+      slug: s.slug || s.key || s.id,
+    }));
+    setOptions(sportSelect, normalised, { valueKey: "slug", labelKey: "name" });
+    state.sport = sportSelect.value;
     await loadLeagues();
     await loadEvents();
   } catch (err) {
@@ -225,7 +228,7 @@ function buildFeedPayload() {
   return {
     sport: state.sport,
     leagues: state.league || undefined,
-    markets: "ML,Spread,Totals",
+    markets: DEFAULT_MARKETS,
     status: state.status === "live" ? "live" : "prematch",
   };
 }
