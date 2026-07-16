@@ -1,0 +1,168 @@
+:root {
+  --bg: #0f1220;
+  --panel: #171b30;
+  --border: #2a2f4a;
+  --text: #e7e9f5;
+  --muted: #9aa0c3;
+  --accent: #5b8cff;
+  --green: #35d07f;
+  --red: #ff5c7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-online {
+  background: rgba(53, 208, 127, 0.15);
+  color: var(--green);
+}
+
+.badge-offline {
+  background: rgba(255, 92, 122, 0.15);
+  color: var(--red);
+}
+
+.warning-banner {
+  background: rgba(255, 196, 0, 0.12);
+  border: 1px solid rgba(255, 196, 0, 0.4);
+  color: #ffd866;
+  padding: 10px 24px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 24px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+select, button {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0 12px;
+  background: #10142a;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.status-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab-btn {
+  width: auto;
+  flex: 1;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.events-list, .feed-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.events-list li, .feed-log li {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.events-list li:hover {
+  background: rgba(91, 140, 255, 0.1);
+}
+
+.feed-log li {
+  cursor: default;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.78rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.event-detail table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.event-detail th, .event-detail td {
+  border-bottom: 1px solid var(--border);
+  padding: 6px 4px;
+  text-align: left;
+}
+
+.feed-controls {
+  margin-bottom: 12px;
+}
+
+.feed-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.feed-controls input {
+  width: auto;
+}
